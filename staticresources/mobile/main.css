@@ -1,0 +1,11 @@
+/*	Calendar widget for Android:
+	Mark weekends red for some extra visual guideline.
+*/
+.ui-datepicker th.ui-datepicker-week-end {
+	color:red;
+}
+
+#error {
+	color:red;
+	font-weight: bold;
+}

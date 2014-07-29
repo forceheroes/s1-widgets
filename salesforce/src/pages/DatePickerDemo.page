@@ -1,0 +1,101 @@
+<apex:page controller="DatePickerDemo" applyHtmlTag="false" standardStylesheets="false" showHeader="false" doctype="html-5.0">
+<html>
+	<head>
+		<title>Date Picker demo</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+		
+		<script type='text/javascript' src='/canvas/sdk/js/publisher.js'></script>
+		<apex:includeScript value="{!URLFOR($Resource.mobile, 'jquery/jquery.min.js')}"/>
+		<apex:includeScript value="{!URLFOR($Resource.mobile, 'jquery-mobile/jquery.mobile-1.4.3.min.js')}"/>
+		<apex:stylesheet value="{!URLFOR($Resource.mobile, 'jquery-mobile/jquery.mobile-1.4.3.min.css')}"/>
+		
+		<!-- Android-only libraries. Workaround for the fact that native date input widget doesn't show up. -->
+		<apex:outputPanel layout="none" rendered="{!deviceType = 'Android'}">
+			<apex:includeScript value="{!URLFOR($Resource.mobile, 'datepicker/external/jquery-ui/datepicker.js')}"/>
+			<apex:includeScript value="{!URLFOR($Resource.mobile, 'datepicker/jquery.mobile.datepicker.js')}"/>
+			<apex:stylesheet value="{!URLFOR($Resource.mobile, 'datepicker/jquery.mobile.datepicker.css')}"/>
+			<apex:stylesheet value="{!URLFOR($Resource.mobile, 'datepicker/jquery.mobile.datepicker.theme.css')}"/>
+		</apex:outputPanel>
+		
+		<apex:includeScript value="{!URLFOR($Resource.mobile, 'main.js')}"/>
+		<apex:stylesheet value="{!URLFOR($Resource.mobile, 'main.css')}"/>
+	</head>
+	<body>
+		<div data-role="page" id="main">
+		<form class="ui-filterable" id="mainForm" action="">
+		<div data-role="header" id="header">
+			<a id="cancel" href="/home/home.jsp" rel="external" target="_parent" class="ui-btn ui-corner-all ui-icon-arrow-l ui-btn-icon-left ui-btn-left">Cancel</a>
+			<h1>{!$Page.DatePickerDemo}</h1>
+			<button id="submit" type="submit" class="ui-btn ui-corner-all ui-icon-check ui-btn-icon-left ui-btn-inline ui-state-disabled">{!$Label.Site.Submit}</button>
+		</div>
+
+		<div role="main" class="ui-content">
+			<div id="error"></div>
+			<div id="success"></div>
+			
+			<div data-role="collapsible" data-collapsed="false" data-mini="true">
+				<h4 class="ui-bar ui-bar-a ui-corner-all">HTML5 Date Picker</h4>
+				<div class="ui-body" data-mini="true" data-role="controlgroup">
+					<div class="ui-field-contain">
+						<label>May render as just a text field, especially on Android</label>
+						<input type="date" />
+					</div>
+				</div>
+			</div>
+			
+			<div data-role="collapsible" data-collapsed="false" data-mini="true">
+				<h4 class="ui-bar ui-bar-a ui-corner-all">Create Contact</h4>
+				<div class="ui-body" data-mini="true" data-role="controlgroup">
+					<div class="ui-field-contain">
+						<label for="FirstName">{!$ObjectType.Contact.fields.FirstName.label}</label>
+						<input id="FirstName" type="text" maxlength="80"/>
+					</div>
+					<div class="ui-field-contain">
+						<label for="LastName">{!$ObjectType.Contact.fields.LastName.label}</label>
+						<input id="LastName" type="text" maxlength="80" required="required"/>
+					</div>
+					<!-- 
+					We need to decide what to display:
+						Desktop & iDevices - HTML5 should be fine: 	<input type="date" />
+						Android - needs workaround:					<input type="text" data-role="date" />
+					
+					It looks like a bit of overkill to make separate VF variables for that but what if you need 10 date pickers?
+					Will you conditionally display one or another in every place?
+					-->
+
+					<apex:variable var="dateInputType" value="{!IF(deviceType = 'Android', 'text', 'date')}" />
+					<apex:variable var="dateInputRole" value="{!IF(deviceType = 'Android', 'date', '')}" />
+					
+					<div class="ui-field-contain">
+						<label for="BirthDate">{!$ObjectType.Contact.fields.BirthDate.label}</label>
+						<input id="BirthDate" type="{!dateInputType}" data-role="{!dateInputRole}" required="required"/>
+					</div>
+				</div>
+			</div>
+		</div>
+		</form>
+	</div><!-- /page main -->
+	</body>
+	<script>
+	function onSubmit(){
+		var obj = {
+			'sobjectType' : 'Contact',
+			'FirstName' : jQuery('#FirstName').val(),
+			'LastName'	: jQuery('#LastName').val(),
+			'BirthDate': getDate('#BirthDate')
+		};
+
+		Visualforce.remoting.Manager.invokeAction(
+			'{!$RemoteAction.DatePickerDemo.create}',
+			obj, 
+			onSubmitComplete
+		);
+		return false;
+	}
+	
+	jQuery(function(){
+		init({!deviceType = 'Android'});
+	});
+	</script>
+</html>
+</apex:page>
